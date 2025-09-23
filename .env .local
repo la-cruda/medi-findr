@@ -1,0 +1,10 @@
+# Template used to construct the Excel export URL when you know the params.
+# You will paste the actual template you see in DevTools (see “How to find the URL” below).
+FL_MYRX_EXPORT_URL_TEMPLATE=
+
+# Optional: for quick dev without hunting URLs, drop a sample .xlsx in /public and point here:
+# e.g., /florida-sample.xlsx (served by Next), we’ll fetch it locally:
+FL_MYRX_TEST_XLS=/florida-sample.csv
+
+
+

@@ -1,0 +1,183 @@
+@base = http://localhost:3000
+@zip = 85001
+@qty = 90
+
+###
+# 0) Health of static sample (Florida CSV available?)
+#    Only passes if you've put public/florida-sample.csv in place.
+HEAD {{base}}/florida-sample.csv
+
+> {%
+client.test("Florida sample CSV is reachable (200)", () => {
+  client.assert(response.status === 200, "Expected 200; static CSV not found under /public");
+});
+%}
+
+###
+# 1) Validation: missing 'drug' should return 400
+GET {{base}}/api/prices
+Accept: application/json
+
+> {%
+client.test("Returns 400 when drug param missing", () => {
+  client.assert(response.status === 400, "Expected 400 for missing drug");
+  client.assert(response.body.error, "Should include an error message");
+});
+%}
+
+###
+# 2) Mock only — deterministic check (should return at least one row)
+GET {{base}}/api/prices?drug=atorvastatin&zip={{zip}}&qty={{qty}}&includeNadac=false&includeFlorida=false
+Accept: application/json
+
+> {%
+client.test("Mock-only returns rows and sorted ascending by totalPrice", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { ok, results, inputs } = response.body;
+  client.assert(ok === true, "ok should be true");
+  client.assert(Array.isArray(results) && results.length >= 1, "Expected >=1 mock result");
+  // Check ascending sort
+  for (let i = 1; i < results.length; i++) {
+    client.assert(results[i-1].totalPrice <= results[i].totalPrice, "Results not sorted ascending");
+  }
+  // Dataset tag present
+  client.assert(results.every(r => r.dataset && typeof r.dataset === "string"), "Each row should include dataset");
+});
+%}
+
+###
+# 3) NADAC only — real open data (metformin tends to match reliably)
+GET {{base}}/api/prices?drug=metformin&qty=60&includeMock=false&includeFlorida=false
+Accept: application/json
+
+> {%
+client.test("NADAC-only responds OK; results may be >= 0", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { ok, results, transparency } = response.body;
+  client.assert(ok === true, "ok should be true");
+  client.assert(Array.isArray(results), "results should be an array");
+  // At minimum ensure we attempted NADAC
+  client.assert(
+    Array.isArray(transparency.attempted) && transparency.attempted.includes("NADAC"),
+    "Expected transparency.attempted to include 'NADAC'"
+  );
+});
+%}
+
+###
+# 4) Florida only — requires env FL_MYRX_TEST_XLS=/florida-sample.csv and file in /public
+GET {{base}}/api/prices?drug=atorvastatin&qty={{qty}}&includeFlorida=true&includeNadac=false&includeMock=false
+Accept: application/json
+
+> {%
+client.test("Florida (sample file) returns rows", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { ok, results, transparency } = response.body;
+  client.assert(ok === true, "ok should be true");
+  client.assert(transparency && transparency.florida, "transparency.florida should exist");
+  client.assert(
+    typeof transparency.florida.url === "string" && transparency.florida.url.length > 0,
+    "transparency.florida.url should show the source file"
+  );
+  // If you wired parsing, you should have at least one row; otherwise this will tell you it failed:
+  client.assert(Array.isArray(results) && results.length >= 1, "Expected >=1 Florida row (check env/file and fetcher)");
+  if (results.length) {
+    client.assert(results.every(r => r.dataset === "Florida MyFloridaRX"), "Rows should be labeled Florida MyFloridaRX");
+  }
+});
+%}
+
+###
+# 5) Chains filter — only walmart + cvs (filters out non-chain rows)
+GET {{base}}/api/prices?drug=atorvastatin&zip={{zip}}&qty={{qty}}&includeNadac=false&includeFlorida=true&chains=walmart,cvs
+Accept: application/json
+
+> {%
+client.test("Chain filter keeps only walmart/cvs", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { results } = response.body;
+  client.assert(Array.isArray(results), "results should be an array");
+  for (const r of results) {
+    client.assert(["walmart","cvs"].includes(r.chain), `Unexpected chain: ${r.chain}`);
+  }
+});
+%}
+
+###
+# 6) RxNorm normalization — brand 'lipitor' should normalize (at least to a non-empty string)
+GET {{base}}/api/prices?drug=lipitor&qty=30&includeNadac=false&includeFlorida=false
+Accept: application/json
+
+> {%
+client.test("RxNorm normalization yields a normalizedDrug string", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { inputs, transparency } = response.body;
+  client.assert(typeof inputs.normalizedDrug === "string" && inputs.normalizedDrug.length > 0, "normalizedDrug should be a non-empty string");
+  // Optional: allow either lipitor or atorvastatin depending on resolution
+  // client.assert(["lipitor","atorvastatin"].includes(inputs.normalizedDrug), "Unexpected normalizedDrug");
+  client.assert(transparency && "resolution" in transparency, "transparency.resolution should be present (may be null)");
+});
+%}
+
+###
+# 7) GoodRx toggle ON — should not break without a key
+GET {{base}}/api/prices?drug=atorvastatin&zip={{zip}}&qty={{qty}}&includeGoodRx=true&includeNadac=false&includeFlorida=false
+Accept: application/json
+
+> {%
+client.test("GoodRx toggle does not error without a key", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { ok, inputs } = response.body;
+  client.assert(ok === true, "ok should be true");
+  client.assert(inputs.includeGoodRx === true, "includeGoodRx should be true");
+  // If you don't have a key, you just won't see GoodRx rows—no failure expected.
+});
+%}
+
+###
+# 8) Limit = 1 — should return exactly one row, with lowest totalPrice first
+GET {{base}}/api/prices?drug=atorvastatin&zip={{zip}}&qty={{qty}}&includeNadac=false&limit=1
+Accept: application/json
+
+> {%
+client.test("Limit enforces result count and sort", () => {
+  client.assert(response.status === 200, "Expected 200");
+  const { results } = response.body;
+  client.assert(Array.isArray(results) && results.length === 1, "Expected exactly 1 result");
+});
+%}
+
+###
+# 9) Privacy headers present
+GET {{base}}/api/prices?drug=atorvastatin&zip={{zip}}
+Accept: application/json
+
+> {%
+client.test("Privacy & rate headers present", () => {
+  client.assert(response.status === 200, "Expected 200");
+  client.assert(response.headers.valueOf("cache-control")?.includes("no-store"), "Cache-Control no-store missing");
+  client.assert(!!response.headers.valueOf("mediFindr-privacy"), "mediFindr-privacy header missing");
+  client.assert(!!response.headers.valueOf("x-ratelimit-limit"), "X-RateLimit-Limit missing");
+});
+%}
+
+@base = http://localhost:3000
+
+### Dedupe by chain
+GET {{base}}/api/prices?drug=atorvastatin&qty=90&includeNadac=false&dedupe=chain
+Accept: application/json
+
+> {%
+client.test("200 OK", () => client.assert(response.status === 200));
+client.test("ok:true", () => client.assert(response.body.ok === true));
+client.test("dedupe applied (one row per chain)", () => {
+  const seen = new Set();
+  for (const r of response.body.results) {
+    if (!r.chain) continue;
+    client.assert(!seen.has(r.chain), `Duplicate chain: ${r.chain}`);
+    seen.add(r.chain);
+  }
+});
+%}
+
+

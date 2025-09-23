@@ -1,0 +1,14 @@
+dbaeumer.vscode-eslint
+esbenp.prettier-vscode
+formulahendry.auto-close-tag
+formulahendry.auto-rename-tag
+bradlc.vscode-tailwindcss
+ms-vscode.vscode-typescript-next
+christian-kohler.path-intellisense
+christian-kohler.npm-intellisense
+dsznajder.es7-react-js-snippets
+humao.rest-client
+eamodio.gitlens
+usernamehw.errorlens
+wix.vscode-import-cost
+pkief.material-icon-theme

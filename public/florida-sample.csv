@@ -1,0 +1,19 @@
+﻿Pharmacy,Drug Name,Generic,Quantity,Price,City,Address,NDC
+Walmart Pharmacy #1234,atorvastatin,Yes,30,9.99,Phoenix,1234 W Main St,00093-7424-56
+CVS Pharmacy #8877,atorvastatin,Yes,30,11.49,Phoenix,200 N Central Ave,00378-1234-05
+Walgreens #5566,atorvastatin,Yes,30,12.25,Tempe,789 S Mill Ave,00536-7890-30
+Costco Pharmacy #42,atorvastatin,Yes,30,10.49,Scottsdale,1700 E Shea Blvd,00781-1253-30
+Walmart Pharmacy #9988,atorvastatin,Yes,90,29.97,Mesa,2020 S Country Club,00093-7424-90
+CVS Pharmacy #1122,atorvastatin,Yes,90,34.47,Phoenix,500 E Camelback Rd,00378-1234-90
+Walgreens #2244,atorvastatin,Yes,90,35.90,Gilbert,55 S Val Vista Dr,00536-7890-90
+Safeway Pharmacy #3101,atorvastatin,Yes,30,10.75,Chandler,4970 S Alma School,54868-7424-30
+Kroger Pharmacy #77,atorvastatin,Yes,90,33.10,Phoenix,123 N 7th Ave,00115-7424-90
+Costco Pharmacy #42,metformin,Yes,60,6.50,Scottsdale,1700 E Shea Blvd,00781-1253-60
+Walmart Pharmacy #1234,metformin,Yes,60,6.90,Phoenix,1234 W Main St,00093-7212-60
+CVS Pharmacy #8877,metformin,Yes,30,4.25,Phoenix,200 N Central Ave,00378-2211-30
+Walgreens #5566,metformin,Yes,90,12.90,Tempe,789 S Mill Ave,00536-2211-90
+Walmart Pharmacy #9988,metformin,Yes,90,12.50,Mesa,2020 S Country Club,00093-7212-90
+Safeway Pharmacy #3101,metformin,Yes,60,6.75,Chandler,4970 S Alma School,54868-2211-60
+Walmart Pharmacy #1234,lisinopril,Yes,30,6.00,Phoenix,1234 W Main St,00093-1048-30
+CVS Pharmacy #8877,lisinopril,Yes,90,15.00,Phoenix,200 N Central Ave,00378-1048-90
+Walgreens #2244,lisinopril,Yes,30,6.50,Gilbert,55 S Val Vista Dr,00536-1048-30
